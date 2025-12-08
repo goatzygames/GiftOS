@@ -22,11 +22,11 @@ function renderLanding() {
     contentDiv.innerHTML = `
         <div style="text-align: center; padding-top: 20px;">
             <h1>Welcome to GiftOS</h1>
-            <p>The privacy-focused, clean way to manage Secret Santa events.</p>
+            <p>Just works.</p>
             <br>
             <button onclick="renderCreateEvent()">Create New Event</button>
             <div style="margin-top: 15px;">
-                <p style="font-size: 13px;">Have an invite code? Enter the URL directly.</p>
+                <p style="font-size: 13px;">Have an invite code? Enter the URL directly in the browser</p>
             </div>
         </div>
     `;
@@ -38,10 +38,10 @@ function renderCreateEvent() {
     contentDiv.innerHTML = `
         <h1>Setup Event</h1>
         <p>You will be the administrator.</p>
-        <input type="text" id="hostEventName" placeholder="Event Name (e.g. Office Party)">
-        <input type="email" id="hostEmail" placeholder="Your Email (Admin Login)">
-        <input type="password" id="hostPass" placeholder="Create Admin Password">
-        <button onclick="createNewGiftEvent()">Generate Event Space</button>
+        <input type="text" id="hostEventName" placeholder="New Event Name">
+        <input type="email" id="hostEmail" placeholder="Host Email">
+        <input type="password" id="hostPass" placeholder="Host Password">
+        <button onclick="createNewGiftEvent()">Generate Event Session</button>
         <button class="secondary" onclick="renderLanding()" style="margin-top: 10px;">Back</button>
     `;
 }
@@ -185,7 +185,7 @@ async function renderAdminPanel(eventId, eventData) {
         </div>
 
         ${eventData.status === 'open' 
-            ? `<button class="danger" onclick="runMatchingAlgorithm('${eventId}')">🎲 Close & Shuffle Pairs</button>` 
+            ? `<button class="danger" onclick="runMatchingAlgorithm('${eventId}')">Close & Shuffle Pairs</button>` 
             : `<button class="secondary" disabled>Event is Closed</button>`
         }
     `;
