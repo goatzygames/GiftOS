@@ -41,12 +41,12 @@ function renderCreateEvent() {
         <input type="text" id="hostEventName" placeholder="Event Name (e.g. Office Party)">
         <input type="email" id="hostEmail" placeholder="Your Email (Admin Login)">
         <input type="password" id="hostPass" placeholder="Create Admin Password">
-        <button onclick="createEvent()">Generate Event Space</button>
+        <button onclick="createNewGiftEvent()">Generate Event Space</button>
         <button class="secondary" onclick="renderLanding()" style="margin-top: 10px;">Back</button>
     `;
 }
 
-async function createEvent() {
+async function createNewGiftEvent() {
     const name = document.getElementById('hostEventName').value;
     const email = document.getElementById('hostEmail').value;
     const pass = document.getElementById('hostPass').value;
