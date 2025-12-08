@@ -498,6 +498,32 @@ function renderEditProfile(eventId) {
 async function loadProfileForEdit(eventId) {
     const email = document.getElementById('editEmail').value.toLowerCase().trim();
     const pin = document.getElementById('editPin').value;
-    if (!email || pin.length < 4) {
-    return alert(t('fillFields'));
+    if (!email || pin.length < 4) return alert(`${t('fillFields')} ${t('pinInvalid')}`);
+
+    const participantRef = db.collection('events').doc(eventId).collection('participants').doc(email);
+    const doc = await participantRef.get();
+    if (!doc.exists) return alert(t('incorrectPass'));
+    const data = doc.data();
+    if (data.pin !== pin) return alert(t('incorrectPass'));
+
+    // render editable form
+    contentDiv.innerHTML = `
+        <h1>${t('editProfile')}</h1>
+        <input type="text" id="editName" value="${data.name}" placeholder="${t('displayName')}">
+        <textarea id="editWish" rows="3">${data.wish.join('\n')}</textarea>
+        <button onclick="saveProfileChanges('${eventId}', '${email}')">${t('saveChanges')}</button>
+        <button class="secondary" onclick="renderEventDashboard({status:'open', name:''}, '${eventId}')" style="margin-top:10px;">${t('cancel')}</button>
+    `;
+}
+
+async function saveProfileChanges(eventId, email) {
+    const name = document.getElementById('editName').value;
+    const wishRaw = document.getElementById('editWish').value;
+    const wishes = wishRaw.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!name || wishes.length === 0) return alert(t('fillFields'));
+
+    const participantRef = db.collection('events').doc(eventId).collection('participants').doc(email);
+    await participantRef.update({ name, wish: wishes });
+    showToast(t('saveChanges'));
+    location.reload();
 }
