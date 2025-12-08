@@ -498,4 +498,6 @@ function renderEditProfile(eventId) {
 async function loadProfileForEdit(eventId) {
     const email = document.getElementById('editEmail').value.toLowerCase().trim();
     const pin = document.getElementById('editPin').value;
-    if (!email || pin.length < 
+    if (!email || pin.length < 4) {
+    return alert(t('fillFields'));
+}
