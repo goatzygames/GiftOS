@@ -10,29 +10,33 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
     <div class="wallpaper"></div>
 
-    <main class="window-container">
-        
-        <header class="window-header">
-            <div class="window-controls">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
+        <main class="window-container">
+            <header class="window-header">
+                <div class="window-title" id="page-title">GiftOS</div>
+                <div class="window-controls">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+            </header>
+
+            <div id="app-content" class="content-area">
+                <div class="loading-spinner">Loading...</div>
             </div>
-            <div class="window-title" id="page-title">GiftOS</div>
-        </header>
+        </main>
 
-        <div id="app-content" class="content-area">
-            <div class="loading-spinner">Loading...</div>
-        </div>
-
-    </main>
+        <!-- Language Switcher outside window -->
+        <select id="lang-select">
+            <option value="en">English  🇬🇧  </option>
+            <option value="et">Eesti    🇪🇪  </option>
+        </select>
 
     <div id="toast-container"></div>
 
     <script src="firebase-config.js"></script>
     <script src="main.js"></script>
 </body>
+
 </html>
