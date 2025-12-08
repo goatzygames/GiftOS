@@ -21,3 +21,4 @@ const firebaseConfig = {
 // Initialize Firebase (CDN links will be in index.html)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+window.db = db;
