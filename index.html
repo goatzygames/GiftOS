@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GiftOS</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="wallpaper"></div>
+
+    <main class="window-container">
+        
+        <header class="window-header">
+            <div class="window-controls">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <div class="window-title" id="page-title">GiftOS</div>
+        </header>
+
+        <div id="app-content" class="content-area">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script src="firebase-config.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
