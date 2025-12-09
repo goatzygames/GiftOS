@@ -523,19 +523,28 @@ function attachParticipantCountListener(eventId) {
 }
 
 
+// --- Start of added global variable ---
+let globalEventHostEmail = null;
+// --- End of added global variable ---
+
 function renderEventDashboard(eventData, eventId) {
+    // --- Start of Host Email update and Title change ---
+    globalEventHostEmail = eventData.hostEmail; // Store host email globally for later check
+    
+    // Clear the original title bar and use the content area for a big title
+    titleDiv.innerText = t('appName'); 
+    // --- End of Host Email update and Title change ---
+
     contentDiv.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>${eventData.name}</h1>
-            <div>
-                <span class="admin-badge" style="cursor:pointer;" onclick="renderAdminLogin('${eventId}')">${t('login')}</span>
-            </div>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h1 style="font-size: 36px; margin-bottom: 5px;">${eventData.name}</h1>
+            <p>Status: <strong>${(eventData.status||'open').toUpperCase()}</strong></p>
         </div>
-        <p>Status: <strong>${(eventData.status||'open').toUpperCase()}</strong></p>
         <hr>
     `;
 
-
+    // The rest of the content remains the same...
+    
     if (eventData.closingAt) {
         const closingDate = eventData.closingAt.toDate ? eventData.closingAt.toDate() : new Date(eventData.closingAt);
         contentDiv.innerHTML += `<p>${t('setDeadline')}: <strong>${closingDate.toLocaleString(currentLang)}</strong></p>`;
@@ -569,7 +578,6 @@ function renderEventDashboard(eventData, eventId) {
             <div id="revealResult"></div>
         `;
     }
-
 
     const copyBtn = document.getElementById('copy-link-btn');
     const shareBtn = document.getElementById('share-btn');
@@ -656,10 +664,23 @@ async function submitParticipant(eventId) {
 
 }
 
-function renderParticipantDashboard(eventId, participantData, eventStatus) {
+function renderParticipantDashboard(eventId, participantData, eventStatus, isAdmin = false) {
     const contentDiv = document.getElementById('app-content');
     
     let actionButtons = '';
+    let adminButton = '';
+
+    // --- Start of Admin Button Logic ---
+    if (isAdmin) {
+        adminButton = `
+            <div style="margin-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px;">
+                <button onclick="renderAdminPanel('${eventId}', {})" class="danger">
+                    ⭐ Go to Admin Panel
+                </button>
+            </div>
+        `;
+    }
+    // --- End of Admin Button Logic ---
 
     if (eventStatus === 'open') {
         actionButtons = `
@@ -671,7 +692,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus) {
     } else {
         actionButtons = `
              <div style="background: var(--primary-color); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="margin-bottom:10px;">The event is closed!</p>
+                <p style="margin-bottom:10px;">🎁 The event is closed!</p>
                 <button 
                     onclick="revealTargetDirectly('${eventId}', '${participantData.email}', '${participantData.pin}')" 
                     style="background: white; color: black; font-weight: bold; width:100%; border:none;">
@@ -681,28 +702,31 @@ function renderParticipantDashboard(eventId, participantData, eventStatus) {
         `;
     }
 
+    // Note: The big event name is now handled by renderEventDashboard which runs first.
     contentDiv.innerHTML = `
         <div style="text-align: center; animation: fadeIn 0.5s;">
-            <div style="position: relative; display: inline-block;">
+            <div style="position: relative; display: inline-block;" class="avatar-interactive">
                 <img src="${participantData.avatarUrl}" 
-                    style="width:120px; height:120px; border-radius:50%; object-fit:cover; border: 4px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    style="width:120px; height:120px; border-radius:50%; object-fit:cover; border: 4px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                 <div style="position: absolute; bottom: 5px; right: 5px; background: white; border-radius: 50%; padding: 5px;">
                     🟢
                 </div>
             </div>
             
             <h2 style="margin-top: 15px;">Hello, ${participantData.name}!</h2>
-            <p style="color: var(--muted); margin-bottom: 20px;">${participantData.email}</p>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">${participantData.email}</p>
 
             ${actionButtons}
 
-            <details style="text-align: left; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+            <details style="text-align: left; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;" class="fade-in-up">
                 <summary style="cursor: pointer; font-weight: bold;">${t('yourWishlist')}</summary>
                 <ul style="margin-top: 10px; padding-left: 20px;">
                     ${participantData.wish.map(w => `<li>${w}</li>`).join('')}
                 </ul>
             </details>
 
+            ${adminButton}
+            
             <button class="secondary" onclick="logoutCurrentUser()">${t('cancel')} / Logout</button>
         </div>
     `;
@@ -715,12 +739,7 @@ async function checkCurrentUser(eventStatus = 'open') {
 
     const { eventId, email, pin } = userData;
 
-    // Only run if we're on the same event page
     if (currentEventID !== eventId) return;
-
-    // Show a loading state while we verify
-    const contentDiv = document.getElementById('app-content');
-    // Optional: add a small loading spinner here if you want
 
     const participantRef = db.collection('events')
         .doc(eventId)
@@ -729,15 +748,18 @@ async function checkCurrentUser(eventStatus = 'open') {
 
     const doc = await participantRef.get();
     
-    // If user doesn't exist on server or PIN changed, clear local storage
     if (!doc.exists || doc.data().pin !== pin) {
         localStorage.removeItem('giftOS_currentUser');
         return;
     }
 
-    // Participant is authenticated, render their specific dashboard
+    // --- Start of Admin Check ---
+    const isAdmin = email === globalEventHostEmail;
+    // --- End of Admin Check ---
+
     const data = doc.data();
-    renderParticipantDashboard(eventId, data, eventStatus);
+    // Pass the isAdmin flag to the dashboard renderer
+    renderParticipantDashboard(eventId, data, eventStatus, isAdmin);
 }
 
 
