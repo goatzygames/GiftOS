@@ -291,8 +291,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderLanding() {
-    appNameWithID = t('appName') + " -- " + currentEventID;
-    titleDiv.innerText = appNameWithID;
+    
+    const idPart = currentEventID ? ` -- ${currentEventID}` : '';
+    const appNameWithID = `${t('appName')}${idPart}`;
+
+    // guard DOM nodes
+    if (titleDiv) titleDiv.innerText = appNameWithID;
+    if (!contentDiv) return;
+
     contentDiv.innerHTML = `
         <div style="text-align: center; padding-top: 20px;">
             <h1>${t('welcome')}</h1>
@@ -519,11 +525,11 @@ function renderEventDashboard(eventData, eventId) {
 
     if (eventData.closingAt) {
         const closingDate = eventData.closingAt.toDate ? eventData.closingAt.toDate() : new Date(eventData.closingAt);
-        contentDiv.innerHTML += `<p>${t('setDeadline')}: <strong>${closingDate.toLocaleString()}</strong></p>`;
+        contentDiv.innerHTML += `<p>${t('setDeadline')}: <strong>${closingDate.toLocaleString(currentLang)}</strong></p>`;
     }
     if (eventData.revealAt) {
         const revealDate = eventData.revealAt.toDate ? eventData.revealAt.toDate() : new Date(eventData.revealAt);
-        contentDiv.innerHTML += `<p>${t('revealAt')}: <strong>${revealDate.toLocaleString()}</strong></p>`;
+        contentDiv.innerHTML += `<p>${t('revealAt')}: <strong>${revealDate.toLocaleString(currentLang)}</strong></p>`;
     }
 
     if (eventData.status === 'open') {
