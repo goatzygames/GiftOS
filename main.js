@@ -646,7 +646,7 @@ function renderAdminPanel(eventId, eventData) {
         <h1>${t('eventSettings')}</h1>
 
         <hr>
-        <h2>${t(participantsText)}</h2>
+        <h2>${t('participantsText')}</h2>
 
         <div id="adminParticipantList">${t('loading')}</div>
 
