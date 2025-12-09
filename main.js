@@ -802,7 +802,34 @@ async function loadProfileForEdit(eventId) {
     if (!doc.exists) return alert(t('incorrectPass'));
     const data = doc.data();
     if (data.pin !== pin) return alert(t('incorrectPass'));
+    
+    // --- START OF FIX: Successful login redirects to Participant Dashboard ---
 
+    // 1. Save login info locally
+    localStorage.setItem('giftOS_currentUser', JSON.stringify({
+        eventId,
+        email,
+        pin
+    }));
+
+    // 2. Fetch event data to get status and host email for admin check
+    const eventDoc = await db.collection('events').doc(eventId).get();
+    const eventData = eventDoc.data();
+    
+    // 3. Determine if the user is the admin
+    const isAdmin = email === eventData.hostEmail;
+
+    // 4. Render the participant dashboard
+    renderParticipantDashboard(eventId, data, eventData.status, isAdmin);
+
+    // Show a success toast, since they just authenticated
+    showToast(t('login')); 
+    
+    // --- END OF FIX ---
+
+
+    // Old code (kept for reference, but now commented/deleted):
+    /*
     contentDiv.innerHTML = `
         <h1>${t('editProfile')}</h1>
         <input type="text" id="editName" value="${data.name}" placeholder="${t('displayName')}">
@@ -810,6 +837,7 @@ async function loadProfileForEdit(eventId) {
         <button onclick="saveProfileChanges('${eventId}', '${email}')">${t('saveChanges')}</button>
         <button class="secondary" onclick="renderEventDashboard({status:'open', name:''}, '${eventId}')" style="margin-top:10px;">${t('cancel')}</button>
     `;
+    */
 }
 
 async function saveProfileChanges(eventId, email) {
