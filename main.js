@@ -399,7 +399,7 @@ async function loadAdminParticipants(eventId) {
 
     const snap = await db.collection('events')
         .doc(eventId)
-        .collection(t(participantsText))
+        .collection('participants')
         .get();
 
     if (snap.empty) {
@@ -645,7 +645,12 @@ function renderAdminPanel(eventId, eventData) {
     contentDiv.innerHTML = `
         <h1>${t('eventSettings')}</h1>
 
+        <hr>
+        <h2>${t(participantsText)}</h2>
+
         <div id="adminParticipantList">${t('loading')}</div>
+
+        <hr>
 
         <button onclick="runMatchingAlgorithm('${eventId}')">${t('closeShuffle')}</button>
         <button onclick="resetParticipants('${eventId}')">${t('resetParticipants')}</button>
@@ -661,9 +666,6 @@ function renderAdminPanel(eventId, eventData) {
 
         <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
         <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
-
-        <hr>
-        <h2>Participants</h2>
         
 
         <br><br>
