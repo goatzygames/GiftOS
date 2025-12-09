@@ -285,6 +285,7 @@ function showToast(msg, timeout = 2500) {
 document.addEventListener('DOMContentLoaded', () => {
     if (currentEventID) {
         checkEventStatus(currentEventID);
+        checkCurrentUser();
     } else {
         renderLanding();
     }
@@ -638,9 +639,57 @@ async function submitParticipant(eventId) {
         createdAt: new Date()
     });
 
+    // Save login info locally
+    localStorage.setItem('giftOS_currentUser', JSON.stringify({
+        eventId,
+        email,
+        pin
+    }));
+
     showToast(t('matchingComplete'));
     location.reload();
+
 }
+
+function renderParticipantDashboard(eventId, participantData) {
+    contentDiv.innerHTML = `
+        <h2>Welcome, ${participantData.name}</h2>
+        <img src="${participantData.avatarUrl}" 
+             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
+        <p>Your email: ${participantData.email}</p>
+        <p>Your wishlist:</p>
+        <ul>${participantData.wish.map(w => `<li>${w}</li>`).join('')}</ul>
+        <button onclick="renderEditProfile('${eventId}')">${t('editProfile')}</button>
+        <button onclick="logoutCurrentUser()">Logout</button>
+    `;
+}
+
+
+async function checkCurrentUser() {
+    const userData = JSON.parse(localStorage.getItem('giftOS_currentUser'));
+    if (!userData) return;
+
+    const { eventId, email, pin } = userData;
+
+    // Only run if we're on the same event page
+    if (currentEventID !== eventId) return;
+
+    const participantRef = db.collection('events')
+        .doc(eventId)
+        .collection('participants')
+        .doc(email);
+
+    const doc = await participantRef.get();
+    if (!doc.exists || doc.data().pin !== pin) {
+        localStorage.removeItem('giftOS_currentUser');
+        return;
+    }
+
+    // Participant is authenticated, render their dashboard or profile
+    const data = doc.data();
+    renderParticipantDashboard(eventId, data);
+}
+
 
 
 function isPinStrong(pin) {
@@ -976,5 +1025,11 @@ async function revealTarget(eventId) {
         </div>
     `;
 }
+
+function logoutCurrentUser() {
+    localStorage.removeItem('giftOS_currentUser');
+    location.reload();
+}
+
 
 
