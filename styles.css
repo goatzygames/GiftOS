@@ -241,11 +241,7 @@ button.danger:hover { opacity: 0.9; }
 }
 .toast.visible { opacity: 1; transform: none; }
 
-/* =========================================
-   ANIMATIONS & CONFETTI
-   ========================================= */
-
-/* 1. Improved Confetti Physics */
+/* 1. Optimized Confetti Physics: Quick Side Burst */
 .confetti-container {
     position: fixed;
     top: 0;
@@ -259,25 +255,51 @@ button.danger:hover { opacity: 0.9; }
 
 .confetti-piece {
     position: absolute;
-    top: -20px;
-    width: 10px;
-    height: 10px;
-    background: #ffd300;
+    width: 8px; /* Slightly smaller */
+    height: 8px; /* Slightly smaller */
+    border-radius: 50%;
     opacity: 0;
-    /* Two animations: Falling down + Swaying side-to-side */
-    animation: fall linear forwards, sway ease-in-out infinite alternate;
+    transform-origin: center;
 }
 
-@keyframes fall {
-    0% { top: -20px; opacity: 1; transform: rotate(0deg); }
-    10% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { top: 110vh; opacity: 0; transform: rotate(720deg); }
+/* Base style for pieces starting on the left */
+.confetti-left-burst {
+    top: 50vh; /* Start roughly in the middle vertically */
+    left: 0;
+    animation: burst-left var(--duration, 1.5s) ease-out forwards;
 }
 
-@keyframes sway {
-    0% { margin-left: 0px; }
-    100% { margin-left: 50px; }
+/* Base style for pieces starting on the right */
+.confetti-right-burst {
+    top: 50vh;
+    right: 0;
+    animation: burst-right var(--duration, 1.5s) ease-out forwards;
+}
+
+/* Keyframes for Left Burst (Shoots right/up) */
+@keyframes burst-left {
+    0% { 
+        opacity: 1; 
+        transform: translate(0, 0) rotate(0deg); 
+    }
+    100% { 
+        /* Uses JS variables for randomized motion */
+        opacity: 0; 
+        transform: translate(var(--burst-offset), -30vh) rotate(var(--burst-angle, 45deg));
+    }
+}
+
+/* Keyframes for Right Burst (Shoots left/up) */
+@keyframes burst-right {
+    0% { 
+        opacity: 1; 
+        transform: translate(0, 0) rotate(0deg); 
+    }
+    100% { 
+        /* The negative sign on X-axis makes it move left */
+        opacity: 0; 
+        transform: translate(calc(-1 * var(--burst-offset)), -30vh) rotate(var(--burst-angle, -45deg)); 
+    }
 }
 
 /* 2. Avatar Animations */

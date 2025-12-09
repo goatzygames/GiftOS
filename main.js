@@ -76,7 +76,10 @@ const translations = {
         adminAccessOnlyText: "Admin access only",
         statusText: "Status",
         statusOpenText: "Open",
-        statusClosedText: "Closed"
+        statusClosedText: "Closed",
+        logoutText: "Log out",
+        gotoAdminPanelText: "Go to Admin view",
+        eventIsClosedText: "Event is closed!"
     },
     et: {
         appName: "GiftOS",
@@ -145,7 +148,10 @@ const translations = {
         adminAccessOnlyText: "Ainult administraatori sissepääs",
         statusText: "Staatus",
         statusOpenText: "Lahti",
-        statusClosedText: "Kinni"
+        statusClosedText: "Kinni",
+        logoutText: "Logi välja",
+        gotoAdminPanelText: "Mine Adminni vaatesse",
+        eventIsClosedText: "Üritus on lõppenud!"
 
     }
 };
@@ -675,7 +681,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
         adminButton = `
             <div style="margin-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 15px;">
                 <button onclick="renderAdminPanel('${eventId}', {})" class="danger">
-                    ⭐ Go to Admin Panel
+                    ${t('gotoAdminPanelText')}
                 </button>
             </div>
         `;
@@ -692,7 +698,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
     } else {
         actionButtons = `
              <div style="background: var(--primary-color); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="margin-bottom:10px;">🎁 The event is closed!</p>
+                <p style="margin-bottom:10px;">${t('eventIsClosedText')}</p>
                 <button 
                     onclick="revealTargetDirectly('${eventId}', '${participantData.email}', '${participantData.pin}')" 
                     style="background: white; color: black; font-weight: bold; width:100%; border:none;">
@@ -1150,7 +1156,7 @@ async function revealTargetDirectly(eventId, email, pin) {
             
             <div style="margin: 30px 0;">
                 <img src="${target.avatarUrl}" 
-                     style="width:150px; height:150px; border-radius:50%; object-fit:cover; border: 5px solid #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                     style="width:150px; height:150px; border-radius:50%; object-fit:cover; border: 5px solid #FFD700; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                 <h2 style="font-size: 2em; margin-top: 15px; color: var(--primary-color);">${target.name}</h2>
             </div>
 
@@ -1208,31 +1214,45 @@ async function enableDirectEditMode(eventId, email) {
     `;
 }
 
-// Add this to your script.js
+
 function triggerConfetti() {
-    const colors = ['#ff3b30', '#ff9500', '#ffcc00', '#4cd964', '#5ac8fa', '#007aff', '#5856d6', '#ff2d55'];
+
+    const numPieces = 25; 
+    const colors = ['#ff3b30', '#ff9500', '#ffcc00', '#4cd964', '#5ac8fa', '#007aff', '#ff2d55'];
     const container = document.createElement('div');
     container.className = 'confetti-container';
     document.body.appendChild(container);
 
-    // Create 100 pieces
-    for (let i = 0; i < 100; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'confetti-piece';
-        
-        // Randomize physics
-        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.left = Math.random() * 100 + '%';
-        piece.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2s to 4s
-        piece.style.animationDelay = (Math.random() * 2) + 's';
-        
-        container.appendChild(piece);
+    const createBurst = (side) => {
+        for (let i = 0; i < numPieces; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            
+            piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            piece.style.setProperty('--burst-offset', (Math.random() * 50) + 'vw');
+            piece.style.setProperty('--burst-angle', (Math.random() * 90 - 45) + 'deg');
+            piece.style.animationDuration = (Math.random() * 0.5 + 1.2) + 's';
+            piece.style.animationDelay = (Math.random() * 0.2) + 's';
+
+            if (side === 'left') {
+                piece.classList.add('confetti-left-burst');
+                piece.style.left = '0';
+            } else {
+                piece.classList.add('confetti-right-burst');
+                piece.style.right = '0';
+            }
+            container.appendChild(piece);
+        }
     }
 
-    // Cleanup after animation ends
+    createBurst('left');
+    createBurst('right');
+
+    // Cleanup after animation ends (faster cleanup time)
     setTimeout(() => {
         container.remove();
-    }, 6000);
+    }, 2000); // Remove container after 2 seconds
 }
 
 /**
@@ -1254,7 +1274,8 @@ function renderRevealResult(targetData, giverName, eventId) {
             
             <div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center;">
                 <img src="${avatarUrl}" 
-                     style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid var(--accent); margin-bottom: 15px;">
+                     style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid var(--accent); margin-bottom: 15px;"
+                     onerror="this.src='https://avatars.dicebear.com/api/identicon/${encodeURIComponent(me.email)}.svg';">
                 <h3 style="color: var(--text-primary); margin: 0;">${targetData.name}</h3>
                 <p style="color: var(--text-secondary); margin: 5px 0 0 0;">${targetData.email}</p>
             </div>
@@ -1262,11 +1283,11 @@ function renderRevealResult(targetData, giverName, eventId) {
             <details style="text-align: left; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: white;">
                 <summary style="cursor: pointer; font-weight: bold; color: var(--text-primary);">${t('theirWish')}</summary>
                 <ul style="margin-top: 10px; padding-left: 20px; list-style-type: none;">
-                    ${targetData.wish.map(w => `<li style="margin-bottom: 5px;">🎁 ${w}</li>`).join('')}
+                    ${targetData.wish.map(w => `<li style="margin-bottom: 5px;">${w}</li>`).join('')}
                 </ul>
             </details>
             
-            <button class="secondary" onclick="logoutCurrentUser()">${t('cancel')} / Logout</button>
+            <button class="secondary" onclick="logoutCurrentUser()">${t('logoutText')}</button>
         </div>
     `;
     
