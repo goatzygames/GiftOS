@@ -291,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderLanding() {
+    appNameWithID = t('appName') + " -- " + currentEventID;
     titleDiv.innerText = t('appName');
     contentDiv.innerHTML = `
         <div style="text-align: center; padding-top: 20px;">
