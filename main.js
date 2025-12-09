@@ -564,7 +564,7 @@ function renderEventDashboard(eventData, eventId) {
                 <input type="text" id="userPin" placeholder="${t('userPin')}" maxlength="4">
                 <button id="submitEntryBtn">${t('submitEntry')}</button>
             </div>
-            <div style="margin-top:10px;"><button onclick="renderEditProfile('${eventId}')">${t('editProfile')}</button></div>
+            <div style="margin-top:10px;"><button class="secondary" onclick="renderEditProfile('${eventId}')">${t('login')}</button></div>
         `;
 
         attachJoinFormValidationListeners();
@@ -1233,6 +1233,47 @@ function triggerConfetti() {
     setTimeout(() => {
         container.remove();
     }, 6000);
+}
+
+/**
+ * Renders the final result card with the target's name, avatar, and wishes.
+ * @param {object} targetData - The full data object of the target participant.
+ * @param {string} giverName - The name of the current user (giver).
+ * @param {string} eventId - The event ID.
+ */
+function renderRevealResult(targetData, giverName, eventId) {
+    const contentDiv = document.getElementById('app-content');
+    
+    // Set a consistent default avatar if URL is missing
+    const avatarUrl = targetData.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(targetData.email)}`;
+    
+    // Clear the whole content area for a dramatic reveal
+    contentDiv.innerHTML = `
+        <div class="pair-reveal reveal-card">
+            <h1 style="font-size: 24px;">🎉 ${t('assignedTo')} ${targetData.name}! 🎉</h1>
+            
+            <div style="margin: 20px 0; display: flex; flex-direction: column; align-items: center;">
+                <img src="${avatarUrl}" 
+                     style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid var(--accent); margin-bottom: 15px;">
+                <h3 style="color: var(--text-primary); margin: 0;">${targetData.name}</h3>
+                <p style="color: var(--text-secondary); margin: 5px 0 0 0;">${targetData.email}</p>
+            </div>
+
+            <details style="text-align: left; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: white;">
+                <summary style="cursor: pointer; font-weight: bold; color: var(--text-primary);">${t('theirWish')}</summary>
+                <ul style="margin-top: 10px; padding-left: 20px; list-style-type: none;">
+                    ${targetData.wish.map(w => `<li style="margin-bottom: 5px;">🎁 ${w}</li>`).join('')}
+                </ul>
+            </details>
+            
+            <button class="secondary" onclick="logoutCurrentUser()">${t('cancel')} / Logout</button>
+        </div>
+    `;
+    
+    // Trigger confetti animation on successful reveal
+    if (typeof triggerConfetti === 'function') {
+        triggerConfetti();
+    }
 }
 
 
