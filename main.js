@@ -164,11 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareBtn = document.getElementById('share-btn');
 
     function showShareButtonsIfEvent() {
+        if (!copyBtn || !shareBtn) return; // ✅ HARD SAFETY FIX
+
         if (!currentEventID) {
             copyBtn.style.display = 'none';
             shareBtn.style.display = 'none';
             return;
         }
+
         copyBtn.style.display = 'inline-block';
         shareBtn.style.display = 'inline-block';
     }
@@ -179,8 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await navigator.clipboard.writeText(link);
                 showToast(t('copyLink'));
-            } catch (e) {
-                // fallback
+            } catch {
                 const tmp = document.createElement('input');
                 document.body.appendChild(tmp);
                 tmp.value = link;
@@ -195,21 +197,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shareBtn) {
         shareBtn.addEventListener('click', async () => {
             const link = `${location.origin}${location.pathname}?event=${currentEventID}`;
+
             if (navigator.share) {
                 try {
-                    await navigator.share({ title: t('appName'), text: t('joinExchange'), url: link });
-                } catch (err) {
-                    // user canceled or error
-                }
+                    await navigator.share({
+                        title: t('appName'),
+                        text: t('joinExchange'),
+                        url: link
+                    });
+                } catch {}
             } else {
-                // fallback to copy
-                try { await navigator.clipboard.writeText(link); showToast(t('copyLink')); } catch(e){}
+                try {
+                    await navigator.clipboard.writeText(link);
+                    showToast(t('copyLink'));
+                } catch {}
             }
         });
     }
 
     showShareButtonsIfEvent();
 });
+
 
 // --- Utility: toasts ---
 function showToast(msg, timeout = 2500) {
@@ -528,30 +536,6 @@ async function saveProfileChanges(eventId, email) {
     location.reload();
 }
 
-// --- Admin Login ---
-function renderAdminLogin(eventId) {
-    contentDiv.innerHTML = `
-        <h1>${t('login')}</h1>
-        <p>Admin access only</p>
-        <input type="password" id="adminPassInput" placeholder="${t('hostPass')}">
-        <button onclick="adminLogin('${eventId}')">${t('login')}</button>
-        <button class="secondary" onclick="location.reload()" style="margin-top:10px;">${t('cancel')}</button>
-    `;
-}
-
-async function adminLogin(eventId) {
-    const inputPass = document.getElementById('adminPassInput').value;
-    if (!inputPass) return alert(t('fillFields'));
-
-    const docRef = db.collection('events').doc(eventId);
-    const doc = await docRef.get();
-    if (!doc.exists) return alert("Event not found");
-
-    const data = doc.data();
-    if (data.hostPass !== inputPass) return alert(t('incorrectPass'));
-
-    renderAdminPanel(eventId, data);
-}
 
 // --- Admin Panel ---
 function renderAdminPanel(eventId, eventData) {
@@ -604,6 +588,38 @@ async function runMatchingAlgorithm(eventId, auto = false) {
     if (!auto) showToast(t('matchingComplete'));
     location.reload();
 }
+
+// --- Admin Login ---
+function renderAdminLogin(eventId) {
+    contentDiv.innerHTML = `
+        <h1>${t('login')}</h1>
+        <p>Admin access only</p>
+        <input type="password" id="adminPassInput" placeholder="${t('hostPass')}">
+        <button onclick="adminLogin('${eventId}')">${t('login')}</button>
+        <button class="secondary" onclick="location.reload()" style="margin-top:10px;">${t('cancel')}</button>
+    `;
+}
+
+
+
+
+
+
+async function adminLogin(eventId) {
+    const inputPass = document.getElementById('adminPassInput').value;
+    if (!inputPass) return alert(t('fillFields'));
+
+    const docRef = db.collection('events').doc(eventId);
+    const doc = await docRef.get();
+    if (!doc.exists) return alert("Event not found");
+
+    const data = doc.data();
+    if (data.hostPass !== inputPass) return alert(t('incorrectPass'));
+
+    renderAdminPanel(eventId, data);
+}
+
+
 
 async function setRevealTime(eventId) {
     const val = document.getElementById('revealTimeInput').value;
