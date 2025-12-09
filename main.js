@@ -419,8 +419,13 @@ async function checkEventStatus(eventId) {
         }
     }
 
+    attachParticipantCountListener(eventId);
+
+    // Renders the generic dashboard first
     renderEventDashboard(data, eventId);
 
+    // NOW checks if we know the user, passing the status (open/closed)
+    checkCurrentUser(data.status); 
 
     attachParticipantCountListener(eventId);
 }
@@ -651,21 +656,62 @@ async function submitParticipant(eventId) {
 
 }
 
-function renderParticipantDashboard(eventId, participantData) {
+function renderParticipantDashboard(eventId, participantData, eventStatus) {
+    const contentDiv = document.getElementById('app-content');
+    
+    let actionButtons = '';
+
+    // LOGIC: If event is OPEN, show Edit. If CLOSED, show Reveal.
+    if (eventStatus === 'open') {
+        actionButtons = `
+            <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p><strong>Status:</strong> waiting for host to close event.</p>
+                <button onclick="renderEditProfile('${eventId}')" style="width:100%">${t('editProfile')}</button>
+            </div>
+        `;
+    } else {
+        // Event is closed, allow One-Click Reveal
+        actionButtons = `
+             <div style="background: var(--primary-color); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin-bottom:10px;">🎁 The event is closed!</p>
+                <button 
+                    onclick="revealTargetDirectly('${eventId}', '${participantData.email}', '${participantData.pin}')" 
+                    style="background: white; color: black; font-weight: bold; width:100%; border:none;">
+                    ${t('revealTarget')}
+                </button>
+            </div>
+        `;
+    }
+
     contentDiv.innerHTML = `
-        <h2>Welcome, ${participantData.name}</h2>
-        <img src="${participantData.avatarUrl}" 
-             style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
-        <p>Your email: ${participantData.email}</p>
-        <p>Your wishlist:</p>
-        <ul>${participantData.wish.map(w => `<li>${w}</li>`).join('')}</ul>
-        <button onclick="renderEditProfile('${eventId}')">${t('editProfile')}</button>
-        <button onclick="logoutCurrentUser()">Logout</button>
+        <div style="text-align: center; animation: fadeIn 0.5s;">
+            <div style="position: relative; display: inline-block;">
+                <img src="${participantData.avatarUrl}" 
+                    style="width:120px; height:120px; border-radius:50%; object-fit:cover; border: 4px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="position: absolute; bottom: 5px; right: 5px; background: white; border-radius: 50%; padding: 5px;">
+                    ✅
+                </div>
+            </div>
+            
+            <h2 style="margin-top: 15px;">Hello, ${participantData.name}!</h2>
+            <p style="color: var(--muted); margin-bottom: 20px;">${participantData.email}</p>
+
+            ${actionButtons}
+
+            <details style="text-align: left; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+                <summary style="cursor: pointer; font-weight: bold;">${t('yourWishlist')}</summary>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    ${participantData.wish.map(w => `<li>${w}</li>`).join('')}
+                </ul>
+            </details>
+
+            <button class="secondary" onclick="logoutCurrentUser()">${t('cancel')} / Logout</button>
+        </div>
     `;
 }
 
 
-async function checkCurrentUser() {
+async function checkCurrentUser(eventStatus = 'open') {
     const userData = JSON.parse(localStorage.getItem('giftOS_currentUser'));
     if (!userData) return;
 
@@ -674,20 +720,26 @@ async function checkCurrentUser() {
     // Only run if we're on the same event page
     if (currentEventID !== eventId) return;
 
+    // Show a loading state while we verify
+    const contentDiv = document.getElementById('app-content');
+    // Optional: add a small loading spinner here if you want
+
     const participantRef = db.collection('events')
         .doc(eventId)
         .collection('participants')
         .doc(email);
 
     const doc = await participantRef.get();
+    
+    // If user doesn't exist on server or PIN changed, clear local storage
     if (!doc.exists || doc.data().pin !== pin) {
         localStorage.removeItem('giftOS_currentUser');
         return;
     }
 
-    // Participant is authenticated, render their dashboard or profile
+    // Participant is authenticated, render their specific dashboard
     const data = doc.data();
-    renderParticipantDashboard(eventId, data);
+    renderParticipantDashboard(eventId, data, eventStatus);
 }
 
 
@@ -1029,6 +1081,75 @@ async function revealTarget(eventId) {
 function logoutCurrentUser() {
     localStorage.removeItem('giftOS_currentUser');
     location.reload();
+}
+
+async function revealTargetDirectly(eventId, email, pin) {
+    const contentDiv = document.getElementById('app-content');
+    contentDiv.innerHTML = `<h3>${t('loading')}</h3>`;
+
+    const eventRef = db.collection('events').doc(eventId);
+    const eventDoc = await eventRef.get();
+    
+    // 1. Check Event Timers (Reveal Block)
+    const eventData = eventDoc.data();
+    if (eventData.revealAt) {
+        const revealDate = eventData.revealAt.toDate ? eventData.revealAt.toDate() : new Date(eventData.revealAt);
+        if (Date.now() < revealDate.getTime()) {
+            location.reload(); // Reload to show dashboard again
+            return alert(`${t('revealBlocked')} ${revealDate.toLocaleString()}`);
+        }
+    }
+
+    // 2. Get Participant Data
+    const pRef = eventRef.collection('participants').doc(email);
+    const pDoc = await pRef.get();
+    const me = pDoc.data();
+
+    // 3. Security Check
+    if (me.pin !== pin) {
+        alert(t('incorrectPass'));
+        location.reload();
+        return;
+    }
+
+    // 4. Get Target Data
+    if (!me.assignedTarget) {
+         contentDiv.innerHTML = `<h3>Error</h3><p>No target assigned yet. Ask admin to shuffle pairs.</p><button onclick="location.reload()">${t('back')}</button>`;
+         return;
+    }
+
+    const targetDoc = await eventRef.collection('participants').doc(me.assignedTarget).get();
+    const target = targetDoc.data();
+
+    // 5. Render The Big Reveal (With Avatars!)
+    contentDiv.innerHTML = `
+        <div style="text-align: center;">
+            <h1>${t('assignedTo')}</h1>
+            
+            <div style="margin: 30px 0;">
+                <img src="${target.avatarUrl}" 
+                     style="width:150px; height:150px; border-radius:50%; object-fit:cover; border: 5px solid #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <h2 style="font-size: 2em; margin-top: 15px; color: var(--primary-color);">${target.name}</h2>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.03); padding: 20px; border-radius: 10px; text-align: left;">
+                <h3 style="border-bottom: 1px solid #ccc; padding-bottom: 10px;">${t('theirWish')}</h3>
+                <ul style="font-size: 1.1em; line-height: 1.6;">
+                    ${target.wish.map(w => `<li>${w}</li>`).join('')}
+                </ul>
+            </div>
+
+            <br>
+            <button onclick="location.reload()">${t('back')}</button>
+        </div>
+        
+        <style>
+            @keyframes popIn {
+                0% { transform: scale(0); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+        </style>
+    `;
 }
 
 
