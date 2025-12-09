@@ -70,7 +70,8 @@ const translations = {
         pinText: "PIN",
         wishesText: "Wishes",
         assignedToText: "Assigned to",
-        actionText: "Action"
+        actionText: "Action",
+        participantsText: "Participants"
     },
     et: {
         appName: "GiftOS",
@@ -132,7 +133,8 @@ const translations = {
         pinText: "Parool",
         wishesText: "Soovid",
         assignedToText: "Määratud",
-        actionText: "Tegevus"
+        actionText: "Tegevus",
+        participantsText: "Osalejad"
 
     }
 };
@@ -397,7 +399,7 @@ async function loadAdminParticipants(eventId) {
 
     const snap = await db.collection('events')
         .doc(eventId)
-        .collection('participants')
+        .collection(t(participantsText))
         .get();
 
     if (snap.empty) {
@@ -643,6 +645,8 @@ function renderAdminPanel(eventId, eventData) {
     contentDiv.innerHTML = `
         <h1>${t('eventSettings')}</h1>
 
+        <div id="adminParticipantList">${t('loading')}</div>
+
         <button onclick="runMatchingAlgorithm('${eventId}')">${t('closeShuffle')}</button>
         <button onclick="resetParticipants('${eventId}')">${t('resetParticipants')}</button>
         <button onclick="deleteEvent('${eventId}')">${t('deleteEvent')}</button>
@@ -660,7 +664,7 @@ function renderAdminPanel(eventId, eventData) {
 
         <hr>
         <h2>Participants</h2>
-        <div id="adminParticipantList">${t('loading')}</div>
+        
 
         <br><br>
         <button class="secondary" onclick="location.reload()">${t('back')}</button>
