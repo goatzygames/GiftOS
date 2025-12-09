@@ -73,7 +73,10 @@ const translations = {
         participantsText: "Participants",
         openById: "Open Event by ID",
         enterEventId: "Enter Event ID",
-        adminAccessOnlyText: "Admin access only"
+        adminAccessOnlyText: "Admin access only",
+        statusText: "Status",
+        statusOpenText: "Open",
+        statusClosedText: "Closed"
     },
     et: {
         appName: "GiftOS",
@@ -139,7 +142,10 @@ const translations = {
         participantsText: "Osalejad",
         openById: "Ava üritus ID-ga",
         enterEventId: "Sisesta ürituse ID",
-        adminAccessOnlyText: "Ainult administraatori sissepääs"
+        adminAccessOnlyText: "Ainult administraatori sissepääs",
+        statusText: "Staatus",
+        statusOpenText: "Lahti",
+        statusClosedText: "Kinni"
 
     }
 };
@@ -203,6 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function getStatusText(status) {
+    switch (status) {
+        case 'open': return t('statusOpenText');
+        case 'closed': return t('statusClosedText');
+        default: return t('statusText'); // fallback
+    }
+}
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -377,6 +392,16 @@ async function createNewGiftEvent() {
         alert(t('fillFields'));
     }
 }
+
+async function renderEventStatus(eventId) {
+    const doc = await db.collection('events').doc(eventId).get();
+    if (!doc.exists) return;
+
+    const data = doc.data();
+    const statusText = getStatusText(data.status); // use translation
+    document.getElementById('status-display').textContent = statusText;
+}
+
 
 async function checkEventStatus(eventId) {
     const docRef = db.collection('events').doc(eventId);
@@ -708,11 +733,13 @@ async function runMatchingAlgorithm(eventId, auto = false) {
 
     let participants = snap.docs.map(d => d.data());
 
+    // Shuffle participants
     for (let i = participants.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [participants[i], participants[j]] = [participants[j], participants[i]];
     }
 
+    // Assign targets
     for (let i = 0; i < participants.length; i++) {
         const giver = participants[i];
         const receiver = participants[(i + 1) % participants.length];
@@ -722,11 +749,13 @@ async function runMatchingAlgorithm(eventId, auto = false) {
             .update({ assignedTarget: receiver.email });
     }
 
+    // Close event
     await ref.update({ status: 'closed' });
 
     if (!auto) showToast(t('matchingComplete'));
     location.reload();
 }
+
 
 function renderAdminLogin(eventId) {
     contentDiv.innerHTML = `
@@ -779,6 +808,7 @@ async function resetParticipants(eventId) {
         await doc.ref.delete();
     }
 
+    // Set the internal status to 'open'
     await ref.update({ status: 'open' });
     location.reload();
 }
