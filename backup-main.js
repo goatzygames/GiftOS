@@ -457,14 +457,7 @@ async function loadAdminParticipants(eventId) {
     const p = doc.data();
     html += `
         <tr>
-            <td style="display:flex; align-items:center; gap:8px;">
-    <img 
-    src="${p.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(p.email)}`}" 
-    style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
-
-            ${p.name}
-            </td>
-
+            <td>${p.name}</td>
             <td>${p.email}</td>
             <td>${p.pin}</td>
             <td class="wish-list">${(p.wish || []).join('<br>')}</td>
@@ -608,40 +601,20 @@ async function submitParticipant(eventId) {
     const wishRaw = document.getElementById('userWish').value;
     const pin = document.getElementById('userPin').value;
 
+    if (!name || !email || !wishRaw || pin.length < 4) return alert(`${t('fillFields')} ${t('pinInvalid')}`);
 
-    if (!name || !email || !wishRaw || pin.length < 4)
-        return alert(`${t('fillFields')} ${t('pinInvalid')}`);
 
     if (!isPinStrong(pin)) return alert(t('pinWeak'));
 
-    const participantRef = db.collection('events')
-        .doc(eventId)
-        .collection('participants')
-        .doc(email);
-
-    const doc = await participantRef.get();
-    if (doc.exists)
-        return alert("This email already joined the event.");
-
-    const avatarSeed = email + eventId;
-    const avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(avatarSeed)}`;
-
     const wishes = wishRaw.split('\n').map(s => s.trim()).filter(Boolean);
+    const participantRef = db.collection('events').doc(eventId).collection('participants').doc(email);
+    const doc = await participantRef.get();
+    if (doc.exists) return alert("This email already joined the event. Use Edit Profile if you need to change.");
 
-    await participantRef.set({
-        name,
-        email,
-        wish: wishes,
-        pin,
-        assignedTarget: null,
-        avatarUrl: avatarUrl,
-        createdAt: new Date()
-    });
-
+    await participantRef.set({ name, email, wish: wishes, pin, assignedTarget: null, createdAt: new Date() });
     showToast(t('matchingComplete'));
     location.reload();
 }
-
 
 function isPinStrong(pin) {
     if (!/^\d{4}$/.test(pin)) return false;
@@ -688,23 +661,14 @@ async function loadProfileForEdit(eventId) {
 async function saveProfileChanges(eventId, email) {
     const name = document.getElementById('editName').value;
     const wishRaw = document.getElementById('editWish').value;
-
     const wishes = wishRaw.split('\n').map(s => s.trim()).filter(Boolean);
     if (!name || wishes.length === 0) return alert(t('fillFields'));
 
-    const participantRef = db.collection('events')
-        .doc(eventId)
-        .collection('participants')
-        .doc(email);
-
-    let updateData = { name, wish: wishes };
-
-    await participantRef.update(updateData);
-
+    const participantRef = db.collection('events').doc(eventId).collection('participants').doc(email);
+    await participantRef.update({ name, wish: wishes });
     showToast(t('saveChanges'));
     location.reload();
 }
-
 
 ////////////////////////////////////
 // Render admin panel event ////////
@@ -964,13 +928,7 @@ async function revealTarget(eventId) {
     resultDiv.innerHTML = `
         <div class="pair-reveal">
             <p>${t('assignedTo')}</p>
-            <img 
-    src="${targetData.avatarUrl || 'default-avatar.png'}" 
-    style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px;"
->
-
-<h1>${targetData.name}</h1>
-
+            <h1>${targetData.name}</h1>
             <p><strong>${t('theirWish')}:</strong></p>
             <p>${targetData.wish.join('<br>')}</p>
         </div>
