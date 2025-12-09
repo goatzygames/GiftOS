@@ -352,6 +352,67 @@ async function checkEventStatus(eventId) {
     attachParticipantCountListener(eventId);
 }
 
+async function loadAdminParticipants(eventId) {
+    const listDiv = document.getElementById('adminParticipantList');
+    if (!listDiv) return;
+
+    const snap = await db.collection('events')
+        .doc(eventId)
+        .collection('participants')
+        .get();
+
+    if (snap.empty) {
+        listDiv.innerHTML = "<p>No participants yet.</p>";
+        return;
+    }
+
+    let html = `<table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>PIN</th>
+            <th>Wishes</th>
+            <th>Assigned To</th>
+            <th>Action</th>
+        </tr>
+    `;
+
+    snap.forEach(doc => {
+        const p = doc.data();
+        html += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.email}</td>
+                <td>${p.pin}</td>
+                <td>${(p.wish || []).join('<br>')}</td>
+                <td>${p.assignedTarget || '-'}</td>
+                <td>
+                    <button onclick="adminRemoveParticipant('${eventId}', '${p.email}')">
+                        ${t('removeParticipant')}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</table>`;
+    listDiv.innerHTML = html;
+}
+
+async function adminRemoveParticipant(eventId, email) {
+    if (!confirm(`${t('confirmRemove')} ${email}?`)) return;
+
+    await db.collection('events')
+        .doc(eventId)
+        .collection('participants')
+        .doc(email)
+        .delete();
+
+    showToast(t('removeParticipant'));
+    loadAdminParticipants(eventId); // ✅ refresh list instantly
+}
+
+
 // --- Live participant count (updates landing counter or event header) ---
 let participantCountUnsub = null;
 function attachParticipantCountListener(eventId) {
@@ -536,8 +597,9 @@ async function saveProfileChanges(eventId, email) {
     location.reload();
 }
 
-
-// --- Admin Panel ---
+////////////////////////////////////
+// Render admin panel event ////////
+////////////////////////////////////
 function renderAdminPanel(eventId, eventData) {
     contentDiv.innerHTML = `
         <h1>${t('eventSettings')}</h1>
@@ -545,6 +607,7 @@ function renderAdminPanel(eventId, eventData) {
         <button onclick="runMatchingAlgorithm('${eventId}')">${t('closeShuffle')}</button>
         <button onclick="resetParticipants('${eventId}')">${t('resetParticipants')}</button>
         <button onclick="deleteEvent('${eventId}')">${t('deleteEvent')}</button>
+
         <hr>
 
         <h3>${t('revealAt')}</h3>
@@ -552,13 +615,22 @@ function renderAdminPanel(eventId, eventData) {
         <button onclick="setRevealTime('${eventId}')">${t('saveChanges')}</button>
 
         <hr>
+
         <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
         <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
+
+        <hr>
+        <h2>Participants</h2>
+        <div id="adminParticipantList">${t('loading')}</div>
 
         <br><br>
         <button class="secondary" onclick="location.reload()">${t('back')}</button>
     `;
+
+
+    loadAdminParticipants(eventId);
 }
+
 
 async function runMatchingAlgorithm(eventId, auto = false) {
     const ref = db.collection('events').doc(eventId);
