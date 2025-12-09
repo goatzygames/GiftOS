@@ -71,7 +71,9 @@ const translations = {
         wishesText: "Wishes",
         assignedToText: "Assigned to",
         actionText: "Action",
-        participantsText: "Participants"
+        participantsText: "Participants",
+        openById: "Open Event by ID",
+        enterEventId: "Enter Event ID"
     },
     et: {
         appName: "GiftOS",
@@ -134,7 +136,9 @@ const translations = {
         wishesText: "Soovid",
         assignedToText: "Määratud",
         actionText: "Tegevus",
-        participantsText: "Osalejad"
+        participantsText: "Osalejad",
+        openById: "Ava üritus ID-ga",
+        enterEventId: "Sisesta ürituse ID"
 
     }
 };
@@ -282,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- Landing Page ---
 function renderLanding() {
     titleDiv.innerText = t('appName');
     contentDiv.innerHTML = `
@@ -290,16 +293,35 @@ function renderLanding() {
             <h1>${t('welcome')}</h1>
             <p>${t('tagline')}</p>
             <br>
+
             <button onclick="renderCreateEvent()">${t('createEvent')}</button>
-            <div style="margin-top: 15px;">
+
+            <div style="margin-top: 20px;">
                 <p style="font-size: 13px;">${t('enterCode')}</p>
+
+                <input 
+                    type="text" 
+                    id="manualEventIdInput" 
+                    placeholder="${t('enterEventId')}"
+                    style="margin-top:6px; text-align:center;"
+                >
+
+                <br>
+
+                <button 
+                    id="btn-confirm"
+                    style="margin-top:8px;"
+                    onclick="openEventById()"
+                >
+                    ${t('openById')}
+                </button>
             </div>
+
             <div id="landing-participant-count" style="margin-top:12px; font-size:14px; color:var(--muted)"></div>
         </div>
     `;
-
-    // show total participants across events? Instead we show a live count for currentEventID only when present.
 }
+
 
 // --- Create Event (Host) ---
 function renderCreateEvent() {
@@ -407,7 +429,8 @@ async function loadAdminParticipants(eventId) {
         return;
     }
 
-    let html = `<table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
+    let html = `<table class="admin-table">
+    <thead>
         <tr>
             <th>${tTableName(0)}</th>
             <th>${tTableName(1)}</th>
@@ -416,27 +439,31 @@ async function loadAdminParticipants(eventId) {
             <th>${tTableName(4)}</th>
             <th>${tTableName(5)}</th>
         </tr>
-    `;
+    </thead>
+    <tbody>
+`;
+
 
     snap.forEach(doc => {
-        const p = doc.data();
-        html += `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.email}</td>
-                <td>${p.pin}</td>
-                <td>${(p.wish || []).join('<br>')}</td>
-                <td>${p.assignedTarget || '-'}</td>
-                <td>
-                    <button onclick="adminRemoveParticipant('${eventId}', '${p.email}')">
-                        ${t('removeParticipant')}
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+    const p = doc.data();
+    html += `
+        <tr>
+            <td>${p.name}</td>
+            <td>${p.email}</td>
+            <td>${p.pin}</td>
+            <td class="wish-list">${(p.wish || []).join('<br>')}</td>
+            <td>${p.assignedTarget || '-'}</td>
+            <td class="admin-action">
+                <button onclick="adminRemoveParticipant('${eventId}', '${p.email}')" id="btn-cancel">
+                    ${t('removeParticipant')}
+                </button>
+            </td>
+        </tr>
+    `;
+});
 
-    html += `</table>`;
+
+    html += `</tbody></table>`;
     listDiv.innerHTML = html;
 }
 
@@ -652,9 +679,9 @@ function renderAdminPanel(eventId, eventData) {
 
         <hr>
 
-        <button onclick="runMatchingAlgorithm('${eventId}')">${t('closeShuffle')}</button>
-        <button onclick="resetParticipants('${eventId}')">${t('resetParticipants')}</button>
-        <button onclick="deleteEvent('${eventId}')">${t('deleteEvent')}</button>
+        <button onclick="runMatchingAlgorithm('${eventId}')" id="btn-confirm">${t('closeShuffle')}</button>
+        <button onclick="resetParticipants('${eventId}')" id="btn-cancel">${t('resetParticipants')}</button>
+        <button onclick="deleteEvent('${eventId}')" id="btn-cancel">${t('deleteEvent')}</button>
 
         <hr>
 
@@ -664,8 +691,7 @@ function renderAdminPanel(eventId, eventData) {
 
         <hr>
 
-        <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
-        <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
+
         
 
         <br><br>
@@ -675,6 +701,11 @@ function renderAdminPanel(eventId, eventData) {
 
     loadAdminParticipants(eventId);
 }
+
+// Add this when necessary right after last <hr> element
+//
+//        <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
+//        <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
 
 
 async function runMatchingAlgorithm(eventId, auto = false) {

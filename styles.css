@@ -262,4 +262,98 @@ button.danger:hover { opacity: 0.9; }
 }
 
 
+#btn-confirm {
+    background-color: #2ecc71 !important;
+    color: #000 !important;
+    border: 2px solid #27ae60 !important;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+}
 
+#btn-confirm:hover {
+    background-color: #27ae60 !important;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.9);
+}
+
+
+#btn-cancel {
+    background-color: #e74c3c !important;
+    color: #000 !important;
+    border: 2px solid #c0392b !important;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
+}
+
+#btn-cancel:hover {
+    background-color: #c0392b !important;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.9);
+}
+
+
+/* Admin Participant Table */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.75);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    font-size: 14px;
+}
+
+/* Header */
+.admin-table thead {
+    background: rgba(255,255,255,0.9);
+}
+
+.admin-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Body */
+.admin-table td {
+    padding: 12px 10px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    vertical-align: top;
+}
+
+/* Zebra striping */
+.admin-table tbody tr:nth-child(even) {
+    background: rgba(0,0,0,0.02);
+}
+
+/* Hover */
+.admin-table tbody tr:hover {
+    background: rgba(0,122,255,0.06);
+}
+
+/* Last row cleanup */
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Wish list formatting */
+.admin-table .wish-list {
+    line-height: 1.4;
+    font-size: 13px;
+}
+
+/* Action cell */
+.admin-table .admin-action {
+    width: 130px;
+}
+
+/* Make danger button fit table better */
+.admin-table #btn-cancel {
+    padding: 8px 10px;
+    font-size: 13px;
+    width: 100%;
+}
