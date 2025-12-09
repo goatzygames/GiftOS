@@ -661,19 +661,17 @@ function renderParticipantDashboard(eventId, participantData, eventStatus) {
     
     let actionButtons = '';
 
-    // LOGIC: If event is OPEN, show Edit. If CLOSED, show Reveal.
     if (eventStatus === 'open') {
         actionButtons = `
             <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                 <p><strong>Status:</strong> waiting for host to close event.</p>
-                <button onclick="renderEditProfile('${eventId}')" style="width:100%">${t('editProfile')}</button>
+                <button onclick="enableDirectEditMode('${eventId}', '${participantData.email}')" style="width:100%">${t('editProfile')}</button>
             </div>
         `;
     } else {
-        // Event is closed, allow One-Click Reveal
         actionButtons = `
              <div style="background: var(--primary-color); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="margin-bottom:10px;">🎁 The event is closed!</p>
+                <p style="margin-bottom:10px;">The event is closed!</p>
                 <button 
                     onclick="revealTargetDirectly('${eventId}', '${participantData.email}', '${participantData.pin}')" 
                     style="background: white; color: black; font-weight: bold; width:100%; border:none;">
@@ -689,7 +687,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus) {
                 <img src="${participantData.avatarUrl}" 
                     style="width:120px; height:120px; border-radius:50%; object-fit:cover; border: 4px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                 <div style="position: absolute; bottom: 5px; right: 5px; background: white; border-radius: 50%; padding: 5px;">
-                    ✅
+                    🟢
                 </div>
             </div>
             
@@ -1076,6 +1074,8 @@ async function revealTarget(eventId) {
             <p>${targetData.wish.join('<br>')}</p>
         </div>
     `;
+
+    triggerConfetti();
 }
 
 function logoutCurrentUser() {
@@ -1150,6 +1150,67 @@ async function revealTargetDirectly(eventId, email, pin) {
             }
         </style>
     `;
+
+    triggerConfetti();
+}
+
+async function enableDirectEditMode(eventId, email) {
+    const contentDiv = document.getElementById('app-content');
+    contentDiv.innerHTML = `<h3>${t('loading')}</h3>`;
+
+    // Fetch fresh data to ensure we don't overwrite with old local data
+    const docRef = db.collection('events').doc(eventId).collection('participants').doc(email);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+        alert("User not found");
+        return location.reload();
+    }
+
+    const data = doc.data();
+
+    contentDiv.innerHTML = `
+        <h1>${t('editProfile')}</h1>
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; justify-content:center;">
+             <img src="${data.avatarUrl}" style="width:50px; height:50px; border-radius:50%;">
+             <span style="color:var(--muted);">${data.email}</span>
+        </div>
+
+        <input type="text" id="editName" value="${data.name}" placeholder="${t('displayName')}">
+        <textarea id="editWish" rows="5" placeholder="${t('yourWishlist')}">${data.wish.join('\n')}</textarea>
+        
+        <button onclick="saveProfileChanges('${eventId}', '${email}')">${t('saveChanges')}</button>
+        
+        <button class="secondary" onclick="location.reload()" style="margin-top:10px;">${t('cancel')}</button>
+    `;
+}
+
+// Add this to your script.js
+function triggerConfetti() {
+    const colors = ['#ff3b30', '#ff9500', '#ffcc00', '#4cd964', '#5ac8fa', '#007aff', '#5856d6', '#ff2d55'];
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+
+    // Create 100 pieces
+    for (let i = 0; i < 100; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        
+        // Randomize physics
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2s to 4s
+        piece.style.animationDelay = (Math.random() * 2) + 's';
+        
+        container.appendChild(piece);
+    }
+
+    // Cleanup after animation ends
+    setTimeout(() => {
+        container.remove();
+    }, 6000);
 }
 
 
