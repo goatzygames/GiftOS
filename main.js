@@ -553,3 +553,117 @@ async function adminLogin(eventId) {
     renderAdminPanel(eventId, data);
 }
 
+// --- Admin Panel ---
+function renderAdminPanel(eventId, eventData) {
+    contentDiv.innerHTML = `
+        <h1>${t('eventSettings')}</h1>
+
+        <button onclick="runMatchingAlgorithm('${eventId}')">${t('closeShuffle')}</button>
+        <button onclick="resetParticipants('${eventId}')">${t('resetParticipants')}</button>
+        <button onclick="deleteEvent('${eventId}')">${t('deleteEvent')}</button>
+        <hr>
+
+        <h3>${t('revealAt')}</h3>
+        <input type="datetime-local" id="revealTimeInput">
+        <button onclick="setRevealTime('${eventId}')">${t('saveChanges')}</button>
+
+        <hr>
+        <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
+        <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
+
+        <br><br>
+        <button class="secondary" onclick="location.reload()">${t('back')}</button>
+    `;
+}
+
+async function runMatchingAlgorithm(eventId, auto = false) {
+    const ref = db.collection('events').doc(eventId);
+    const snap = await ref.collection('participants').get();
+
+    if (snap.size < 2) return alert(t('minTwoPeople'));
+
+    let participants = snap.docs.map(d => d.data());
+
+    // Secure shuffle
+    for (let i = participants.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [participants[i], participants[j]] = [participants[j], participants[i]];
+    }
+
+    for (let i = 0; i < participants.length; i++) {
+        const giver = participants[i];
+        const receiver = participants[(i + 1) % participants.length];
+
+        await ref.collection('participants')
+            .doc(giver.email)
+            .update({ assignedTarget: receiver.email });
+    }
+
+    await ref.update({ status: 'closed' });
+
+    if (!auto) showToast(t('matchingComplete'));
+    location.reload();
+}
+
+async function setRevealTime(eventId) {
+    const val = document.getElementById('revealTimeInput').value;
+    if (!val) return alert(t('fillFields'));
+
+    await db.collection('events').doc(eventId).update({
+        revealAt: new Date(val)
+    });
+
+    showToast(t('saveChanges'));
+}
+
+async function resetParticipants(eventId) {
+    if (!confirm("Reset ALL participants?")) return;
+    const ref = db.collection('events').doc(eventId);
+    const snap = await ref.collection('participants').get();
+
+    for (const doc of snap.docs) {
+        await doc.ref.delete();
+    }
+
+    await ref.update({ status: 'open' });
+    location.reload();
+}
+
+async function deleteEvent(eventId) {
+    if (!confirm("DELETE this event PERMANENTLY?")) return;
+
+    const ref = db.collection('events').doc(eventId);
+    const snap = await ref.collection('participants').get();
+    for (const doc of snap.docs) await doc.ref.delete();
+
+    await ref.delete();
+    location.href = "index.html";
+}
+
+async function exportJSON(eventId) {
+    const snap = await db.collection('events').doc(eventId).collection('participants').get();
+    const data = snap.docs.map(d => d.data());
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "participants.json";
+    a.click();
+}
+
+async function exportCSV(eventId) {
+    const snap = await db.collection('events').doc(eventId).collection('participants').get();
+    const rows = snap.docs.map(d => {
+        const p = d.data();
+        return `"${p.name}","${p.email}","${p.wish.join('|')}","${p.assignedTarget || ''}"`;
+    });
+
+    const csv = "Name,Email,Wish,AssignedTo\n" + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "participants.csv";
+    a.click();
+}
+
