@@ -528,3 +528,28 @@ async function saveProfileChanges(eventId, email) {
     location.reload();
 }
 
+// --- Admin Login ---
+function renderAdminLogin(eventId) {
+    contentDiv.innerHTML = `
+        <h1>${t('login')}</h1>
+        <p>Admin access only</p>
+        <input type="password" id="adminPassInput" placeholder="${t('hostPass')}">
+        <button onclick="adminLogin('${eventId}')">${t('login')}</button>
+        <button class="secondary" onclick="location.reload()" style="margin-top:10px;">${t('cancel')}</button>
+    `;
+}
+
+async function adminLogin(eventId) {
+    const inputPass = document.getElementById('adminPassInput').value;
+    if (!inputPass) return alert(t('fillFields'));
+
+    const docRef = db.collection('events').doc(eventId);
+    const doc = await docRef.get();
+    if (!doc.exists) return alert("Event not found");
+
+    const data = doc.data();
+    if (data.hostPass !== inputPass) return alert(t('incorrectPass'));
+
+    renderAdminPanel(eventId, data);
+}
+
