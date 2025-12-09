@@ -79,7 +79,8 @@ const translations = {
         statusClosedText: "Closed",
         logoutText: "Log out",
         gotoAdminPanelText: "Go to Admin view",
-        eventIsClosedText: "Event is closed!"
+        eventIsClosedText: "Event is closed!",
+        eventIsOpenText: "Event is open!"
     },
     et: {
         appName: "GiftOS",
@@ -151,7 +152,8 @@ const translations = {
         statusClosedText: "Kinni",
         logoutText: "Logi välja",
         gotoAdminPanelText: "Mine Adminni vaatesse",
-        eventIsClosedText: "Üritus on lõppenud!"
+        eventIsClosedText: "Üritus on lõppenud!",
+        eventIsOpenText: "Üritus on veel lahti!"
 
     }
 };
@@ -691,7 +693,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
     if (eventStatus === 'open') {
         actionButtons = `
             <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <p><strong>Status:</strong> waiting for host to close event.</p>
+                <p><strong>${t('statusText')}:</strong> ${t('eventIsOpenText')}</p>
                 <button onclick="enableDirectEditMode('${eventId}', '${participantData.email}')" style="width:100%">${t('editProfile')}</button>
             </div>
         `;
