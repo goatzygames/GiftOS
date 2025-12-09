@@ -357,3 +357,53 @@ button.danger:hover { opacity: 0.9; }
     font-size: 13px;
     width: 100%;
 }
+
+/* Buttons - Clean, flat version */
+button {
+    background: var(--gradient-accent);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+    background: var(--accent-hover);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Secondary and Danger Buttons */
+button.secondary {
+    background: #e5e5ea;
+    color: var(--text-primary);
+}
+
+button.secondary:hover {
+    background: #dcdce1;
+}
+
+button.danger {
+    background: var(--danger);
+    color: white;
+}
+
+button.danger:hover {
+    background: #e03127;
+}
+
+/* Remove box-shadow and border from confirm/cancel */
+#btn-confirm, #btn-cancel {
+    box-shadow: none !important;
+    border: none !important;
+}
+#btn-confirm:hover, #btn-cancel:hover {
+    box-shadow: none !important;
+}

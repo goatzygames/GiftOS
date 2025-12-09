@@ -1,5 +1,4 @@
-// main.js
-// --- Global State ---
+
 const urlParams = new URLSearchParams(window.location.search);
 const currentEventID = urlParams.get('event');
 const contentDiv = document.getElementById('app-content');
@@ -8,7 +7,7 @@ const toastContainer = document.getElementById('toast-container');
 
 let currentLang = localStorage.getItem('lang') || 'et';
 
-// --- Translations (added keys used by new UI) ---
+
 const translations = {
     en: {
         appName: "GiftOS",
@@ -143,7 +142,7 @@ const translations = {
     }
 };
 
-// --- Helper function to get translation ---
+
 function t(key) {
     return translations[currentLang][key] || key;
 }
@@ -174,7 +173,7 @@ function tTableName(index)
     }
 }
 
-// --- Theme handling ---
+
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const saved = localStorage.getItem('darkMode') === 'true';
@@ -190,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- Language switcher listener ---
+
 document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('lang-select');
     if (langSelect) {
@@ -203,13 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- Share / Copy link buttons ---
+
 document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copy-link-btn');
     const shareBtn = document.getElementById('share-btn');
 
     function showShareButtonsIfEvent() {
-        if (!copyBtn || !shareBtn) return; // ✅ HARD SAFETY FIX
+        if (!copyBtn || !shareBtn) return;
 
         if (!currentEventID) {
             copyBtn.style.display = 'none';
@@ -264,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// --- Utility: toasts ---
 function showToast(msg, timeout = 2500) {
     const el = document.createElement('div');
     el.className = 'toast';
@@ -275,14 +273,12 @@ function showToast(msg, timeout = 2500) {
     setTimeout(() => el.remove(), timeout + 300);
 }
 
-// --- Initialization ---
+
 document.addEventListener('DOMContentLoaded', () => {
     if (currentEventID) {
         checkEventStatus(currentEventID);
     } else {
         renderLanding();
-        // keep live count on landing for featured events
-        // nothing else required
     }
 });
 
@@ -323,7 +319,7 @@ function renderLanding() {
 }
 
 
-// --- Create Event (Host) ---
+
 function renderCreateEvent() {
     titleDiv.innerText = t('newEvent');
     contentDiv.innerHTML = `
@@ -344,7 +340,7 @@ function renderCreateEvent() {
     `;
 }
 
-// --- Create Event ---
+
 async function createNewGiftEvent() {
     const name = document.getElementById('hostEventName').value;
     const email = document.getElementById('hostEmail').value;
@@ -352,7 +348,7 @@ async function createNewGiftEvent() {
 
     if (!name || !email || !pass) return alert(t('fillFields'));
 
-    // eventId consistent with previous generation approach
+
     const eventId = Math.random().toString(36).substring(2, 9);
 
     const closeVal = document.getElementById('hostCloseAt')?.value;
@@ -370,15 +366,14 @@ async function createNewGiftEvent() {
             autoMatch: autoMatch
         });
 
-        // navigate into event
+
         window.location.search = `?event=${eventId}`;
     } catch (error) {
         console.error(error);
-        alert(t('fillFields')); // fallback
+        alert(t('fillFields'));
     }
 }
 
-// --- Check Event Status ---
 async function checkEventStatus(eventId) {
     const docRef = db.collection('events').doc(eventId);
     const doc = await docRef.get();
@@ -390,19 +385,16 @@ async function checkEventStatus(eventId) {
     const data = doc.data();
     titleDiv.innerText = data.name;
 
-    // If event has a closingAt and it's past and event is still 'open',
-    // optionally auto-run matching if autoMatch is enabled.
     if (data.closingAt && data.status === 'open') {
         const closingDate = data.closingAt.toDate ? data.closingAt.toDate() : new Date(data.closingAt);
         if (Date.now() >= closingDate.getTime() && data.autoMatch) {
-            // attempt to perform matching once by a client; this will call the same matching logic used by admin button.
-            // We don't require host password for auto-match to avoid needing backend; it's the host's choice to enable it.
+
             try {
                 await runMatchingAlgorithm(eventId, /*auto*/ true);
             } catch (e) {
                 console.warn('Auto-match failed or not run', e);
             }
-            // refresh doc
+
             const newDoc = await docRef.get();
             renderEventDashboard(newDoc.data(), eventId);
             return;
@@ -411,7 +403,7 @@ async function checkEventStatus(eventId) {
 
     renderEventDashboard(data, eventId);
 
-    // set up live participant count for this event
+
     attachParticipantCountListener(eventId);
 }
 
@@ -477,11 +469,11 @@ async function adminRemoveParticipant(eventId, email) {
         .delete();
 
     showToast(t('removeParticipant'));
-    loadAdminParticipants(eventId); // ✅ refresh list instantly
+    loadAdminParticipants(eventId);
 }
 
 
-// --- Live participant count (updates landing counter or event header) ---
+
 let participantCountUnsub = null;
 function attachParticipantCountListener(eventId) {
     if (participantCountUnsub) participantCountUnsub();
@@ -489,19 +481,18 @@ function attachParticipantCountListener(eventId) {
     const partsRef = db.collection('events').doc(eventId).collection('participants');
     participantCountUnsub = partsRef.onSnapshot(snap => {
         const count = snap.size;
-        // update event header or landing marker
+ 
         const landingCountEl = document.getElementById('landing-participant-count');
         if (landingCountEl) landingCountEl.innerText = `${count} participants so far`;
-        // If on event page, update small indicator
+
         const eventHeader = contentDiv.querySelector('p');
         if (eventHeader) {
-            // replace status line if present
-            // (we re-render dashboard thoroughly when needed, so this is just best-effort)
+
         }
     });
 }
 
-// --- Event Dashboard ---
+
 function renderEventDashboard(eventData, eventId) {
     contentDiv.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -514,7 +505,7 @@ function renderEventDashboard(eventData, eventId) {
         <hr>
     `;
 
-    // Show closing / reveal info
+
     if (eventData.closingAt) {
         const closingDate = eventData.closingAt.toDate ? eventData.closingAt.toDate() : new Date(eventData.closingAt);
         contentDiv.innerHTML += `<p>${t('setDeadline')}: <strong>${closingDate.toLocaleString()}</strong></p>`;
@@ -549,14 +540,14 @@ function renderEventDashboard(eventData, eventId) {
         `;
     }
 
-    // update share buttons shown earlier
+
     const copyBtn = document.getElementById('copy-link-btn');
     const shareBtn = document.getElementById('share-btn');
     if (copyBtn) copyBtn.style.display = 'inline-block';
     if (shareBtn) shareBtn.style.display = 'inline-block';
 }
 
-// --- Attach validation listeners for join form ---
+
 function attachJoinFormValidationListeners() {
     const emailEl = document.getElementById('userEmail');
     const pinEl = document.getElementById('userPin');
@@ -574,7 +565,7 @@ function attachJoinFormValidationListeners() {
 
     emailEl.addEventListener('input', validate);
     pinEl.addEventListener('input', (e) => {
-        // numeric-only enforcement
+
         e.target.value = e.target.value.replace(/\D/g, '').substring(0,4);
         validate();
     });
@@ -586,7 +577,7 @@ function attachJoinFormValidationListeners() {
     });
 }
 
-// --- Submit Participant ---
+
 async function submitParticipant(eventId) {
     const name = document.getElementById('userName').value;
     const email = document.getElementById('userEmail').value.toLowerCase().trim();
@@ -595,32 +586,30 @@ async function submitParticipant(eventId) {
 
     if (!name || !email || !wishRaw || pin.length < 4) return alert(`${t('fillFields')} ${t('pinInvalid')}`);
 
-    // pin strength checks
+
     if (!isPinStrong(pin)) return alert(t('pinWeak'));
 
-    const wishes = wishRaw.split('\n').map(s => s.trim()).filter(Boolean); // store as array
+    const wishes = wishRaw.split('\n').map(s => s.trim()).filter(Boolean);
     const participantRef = db.collection('events').doc(eventId).collection('participants').doc(email);
     const doc = await participantRef.get();
-    if (doc.exists) return alert("This email already joined the event. Use Edit Profile if you need to change."); // friendlier than fillFields
+    if (doc.exists) return alert("This email already joined the event. Use Edit Profile if you need to change.");
 
     await participantRef.set({ name, email, wish: wishes, pin, assignedTarget: null, createdAt: new Date() });
     showToast(t('matchingComplete'));
     location.reload();
 }
 
-// --- PIN strength helper ---
 function isPinStrong(pin) {
     if (!/^\d{4}$/.test(pin)) return false;
-    // disallow repeats like 0000, 1111
+
     if (/^(\d)\1{3}$/.test(pin)) return false;
-    // disallow sequences 0123 1234 4321 etc.
+
     const seqA = '01234567890';
     const seqB = '9876543210';
     if (seqA.includes(pin) || seqB.includes(pin)) return false;
     return true;
 }
 
-// --- Edit Profile (participant self-edit) ---
 function renderEditProfile(eventId) {
     contentDiv.innerHTML = `
         <h1>${t('editProfile')}</h1>
@@ -643,7 +632,6 @@ async function loadProfileForEdit(eventId) {
     const data = doc.data();
     if (data.pin !== pin) return alert(t('incorrectPass'));
 
-    // render editable form
     contentDiv.innerHTML = `
         <h1>${t('editProfile')}</h1>
         <input type="text" id="editName" value="${data.name}" placeholder="${t('displayName')}">
@@ -716,7 +704,6 @@ async function runMatchingAlgorithm(eventId, auto = false) {
 
     let participants = snap.docs.map(d => d.data());
 
-    // Secure shuffle
     for (let i = participants.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [participants[i], participants[j]] = [participants[j], participants[i]];
@@ -737,7 +724,6 @@ async function runMatchingAlgorithm(eventId, auto = false) {
     location.reload();
 }
 
-// --- Admin Login ---
 function renderAdminLogin(eventId) {
     contentDiv.innerHTML = `
         <h1>${t('login')}</h1>
@@ -830,4 +816,106 @@ async function exportCSV(eventId) {
     a.download = "participants.csv";
     a.click();
 }
+
+async function openEventById() {
+    const input = document.getElementById('manualEventIdInput');
+    if (!input) return;
+
+    const eventId = input.value.trim();
+
+    if (!eventId) {
+        alert(t('fillFields'));
+        return;
+    }
+
+    try {
+        const docRef = db.collection('events').doc(eventId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            alert("Event not found");
+            return;
+        }
+
+        window.location.search = `?event=${eventId}`;
+
+    } catch (e) {
+        console.error("Failed to open event by ID:", e);
+        alert("Failed to open event.");
+    }
+}
+
+async function revealTarget(eventId) {
+    const email = document.getElementById('checkEmail').value.toLowerCase().trim();
+    const pin = document.getElementById('checkPin').value;
+
+    if (!email || pin.length < 4) {
+        alert(`${t('fillFields')} ${t('pinInvalid')}`);
+        return;
+    }
+
+    const eventRef = db.collection('events').doc(eventId);
+    const eventDoc = await eventRef.get();
+
+    if (!eventDoc.exists) {
+        alert("Event not found");
+        return;
+    }
+
+    const eventData = eventDoc.data();
+
+    if (eventData.revealAt) {
+        const revealDate = eventData.revealAt.toDate
+            ? eventData.revealAt.toDate()
+            : new Date(eventData.revealAt);
+
+        if (Date.now() < revealDate.getTime()) {
+            alert(`${t('revealBlocked')} ${revealDate.toLocaleString()}`);
+            return;
+        }
+    }
+
+    const participantRef = eventRef.collection('participants').doc(email);
+    const doc = await participantRef.get();
+
+    if (!doc.exists) {
+        alert(t('incorrectPass'));
+        return;
+    }
+
+    const data = doc.data();
+
+    if (data.pin !== pin) {
+        alert(t('incorrectPass'));
+        return;
+    }
+
+    if (!data.assignedTarget) {
+        alert("Matching not completed yet.");
+        return;
+    }
+
+    const targetRef = eventRef.collection('participants').doc(data.assignedTarget);
+    const targetDoc = await targetRef.get();
+
+    if (!targetDoc.exists) {
+        alert("Assigned target not found.");
+        return;
+    }
+
+    const targetData = targetDoc.data();
+
+    const resultDiv = document.getElementById('revealResult');
+    if (!resultDiv) return;
+
+    resultDiv.innerHTML = `
+        <div class="pair-reveal">
+            <p>${t('assignedTo')}</p>
+            <h1>${targetData.name}</h1>
+            <p><strong>${t('theirWish')}:</strong></p>
+            <p>${targetData.wish.join('<br>')}</p>
+        </div>
+    `;
+}
+
 
