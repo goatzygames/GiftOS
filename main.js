@@ -44,7 +44,7 @@ const translations = {
         assignedTo: "You are gifting to:",
         theirWish: "Their Wish",
         minTwoPeople: "Need at least 2 people!",
-        matchingComplete: "Matching Complete! Users can now login to see their target.",
+        matchingComplete: "Matching Complete!",
         loading: "Loading...",
         copyLink: "Link copied to clipboard",
         invalidEmail: "Invalid email",
@@ -64,7 +64,13 @@ const translations = {
         setDeadline: "Set Close Date/Time (optional)",
         autoMatchToggle: "Auto-match at close",
         previewMatching: "Preview Matching",
-        dryRunNotice: "This is a preview and won't save until you confirm."
+        dryRunNotice: "This is a preview and won't save until you confirm.",
+        emailText: "Email",
+        nameText: "Name",
+        pinText: "PIN",
+        wishesText: "Wishes",
+        assignedToText: "Assigned to",
+        actionText: "Action"
     },
     et: {
         appName: "GiftOS",
@@ -100,7 +106,7 @@ const translations = {
         assignedTo: "Sa kingid:",
         theirWish: "Tema soov",
         minTwoPeople: "Vaja vähemalt 2 inimest!",
-        matchingComplete: "Paaride määramine lõpetatud! Saate nüüd logida sisse ja näha, kellele kingi teete.",
+        matchingComplete: "Paaride määramine lõpetatud!",
         loading: "Laadimine...",
         copyLink: "Ling kopeeritud lõikelauale",
         invalidEmail: "Vigane e-post",
@@ -120,13 +126,46 @@ const translations = {
         setDeadline: "Sea sulgemise kuupäev/kellaaeg (valikuline)",
         autoMatchToggle: "Automaatne paarimine sulgemisel",
         previewMatching: "Eelvaade paarimisest",
-        dryRunNotice: "See on eelvaade ja ei salvestu enne kinnitamist."
+        dryRunNotice: "See on eelvaade ja ei salvestu enne kinnitamist.",
+        emailText: "E-post",
+        nameText: "Nimi",
+        pinText: "Parool",
+        wishesText: "Soovid",
+        assignedToText: "Määratud",
+        actionText: "Tegevus"
+
     }
 };
 
 // --- Helper function to get translation ---
 function t(key) {
     return translations[currentLang][key] || key;
+}
+
+function tTableName(index)
+{
+    switch (index)
+    {
+        case 0:
+            return t('nameText');
+            break;
+        case 1:
+            return t('emailText');
+            break;
+        case 2:
+            return t('pinText');
+            break;
+        case 3:
+            return t('wishesText');
+            break;
+        case 4:
+            return t('assignedToText');
+            break;
+        case 5:
+            return t('actionText');
+            break;
+
+    }
 }
 
 // --- Theme handling ---
@@ -368,12 +407,12 @@ async function loadAdminParticipants(eventId) {
 
     let html = `<table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
         <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>PIN</th>
-            <th>Wishes</th>
-            <th>Assigned To</th>
-            <th>Action</th>
+            <th>${tTableName(0)}</th>
+            <th>${tTableName(1)}</th>
+            <th>${tTableName(2)}</th>
+            <th>${tTableName(3)}</th>
+            <th>${tTableName(4)}</th>
+            <th>${tTableName(5)}</th>
         </tr>
     `;
 
