@@ -72,14 +72,15 @@ const translations = {
         actionText: "Action",
         participantsText: "Participants",
         openById: "Open Event by ID",
-        enterEventId: "Enter Event ID"
+        enterEventId: "Enter Event ID",
+        adminAccessOnlyText: "Admin access only"
     },
     et: {
         appName: "GiftOS",
         welcome: "Tere tulemast GiftOS-i",
-        tagline: "Lihtne ja toimiv.",
+        tagline: "Lihtne ja töötab.",
         createEvent: "Loo uus üritus",
-        enterCode: "On kutsekood? Sisesta see otse aadressiribale",
+        enterCode: "On kutsekood? Sisesta see otse siia!",
         newEvent: "Uus üritus",
         setupEvent: "Seadista üritus",
         adminText: "Te olete administraator",
@@ -101,7 +102,7 @@ const translations = {
         userPin: "Loo 4-kohaline PIN (Jäta meelde!)",
         submitEntry: "Esita soov",
         pairsMade: "Paarid on loodud!",
-        enterEmailPin: "Sisesta oma e-post ja PIN, et näha, kellele kingid",
+        enterEmailPin: "Sisesta oma e-post ja PIN, et näha kellele kingid",
         checkEmail: "Sinu e-post",
         checkPin: "Sinu 4-kohaline PIN",
         revealTarget: "Näita kingisaajat",
@@ -110,15 +111,15 @@ const translations = {
         minTwoPeople: "Vaja vähemalt 2 inimest!",
         matchingComplete: "Paaride määramine lõpetatud!",
         loading: "Laadimine...",
-        copyLink: "Ling kopeeritud lõikelauale",
+        copyLink: "Link kopeeritud lõikelauale",
         invalidEmail: "Vigane e-post",
         pinInvalid: "PIN peab olema 4 numbrit",
         pinWeak: "Vali tugevam PIN (ei tohi olla kordused/järjestused)",
         editProfile: "Muuda profiili",
         saveChanges: "Salvesta",
         removeParticipant: "Eemalda",
-        confirmRemove: "Oled kindel, et soovid eemaldada",
-        eventSettings: "Ürituse seaded",
+        confirmRemove: "Oled kindel, et soovid eemaldada?",
+        eventSettings: "Ürituse sätted",
         deleteEvent: "Kustuta üritus",
         resetParticipants: "Lähtesta osalejad",
         exportCSV: "Ekspordi CSV",
@@ -131,13 +132,14 @@ const translations = {
         dryRunNotice: "See on eelvaade ja ei salvestu enne kinnitamist.",
         emailText: "E-post",
         nameText: "Nimi",
-        pinText: "Parool",
+        pinText: "PIN",
         wishesText: "Soovid",
         assignedToText: "Määratud",
         actionText: "Tegevus",
         participantsText: "Osalejad",
         openById: "Ava üritus ID-ga",
-        enterEventId: "Sisesta ürituse ID"
+        enterEventId: "Sisesta ürituse ID",
+        adminAccessOnlyText: "Ainult administraatori sissepääs"
 
     }
 };
@@ -319,6 +321,14 @@ function renderLanding() {
 }
 
 
+// Date setting for later
+//        <div style="margin-top:8px;">
+//            <label>${t('setDeadline')}</label><br>
+//            <input type="datetime-local" id="hostCloseAt"/>
+//        </div>
+//        <div style="margin-top:6px;">
+//            <label><input type="checkbox" id="hostAutoMatch" /> ${t('autoMatchToggle')}</label>
+//        </div>
 
 function renderCreateEvent() {
     titleDiv.innerText = t('newEvent');
@@ -328,13 +338,7 @@ function renderCreateEvent() {
         <input type="text" id="hostEventName" placeholder="${t('eventName')}">
         <input type="email" id="hostEmail" placeholder="${t('hostEmail')}">
         <input type="password" id="hostPass" placeholder="${t('hostPass')}">
-        <div style="margin-top:8px;">
-            <label>${t('setDeadline')}</label><br>
-            <input type="datetime-local" id="hostCloseAt"/>
-        </div>
-        <div style="margin-top:6px;">
-            <label><input type="checkbox" id="hostAutoMatch" /> ${t('autoMatchToggle')}</label>
-        </div>
+
         <button onclick="createNewGiftEvent()">${t('generateEvent')}</button>
         <button class="secondary" onclick="renderLanding()" style="margin-top: 10px;">${t('back')}</button>
     `;
@@ -673,12 +677,6 @@ function renderAdminPanel(eventId, eventData) {
 
         <hr>
 
-        <h3>${t('revealAt')}</h3>
-        <input type="datetime-local" id="revealTimeInput">
-        <button onclick="setRevealTime('${eventId}')">${t('saveChanges')}</button>
-
-        <hr>
-
 
         
 
@@ -694,6 +692,12 @@ function renderAdminPanel(eventId, eventData) {
 //
 //        <button onclick="exportCSV('${eventId}')">${t('exportCSV')}</button>
 //        <button onclick="exportJSON('${eventId}')">${t('exportJSON')}</button>
+//
+// Add this as well for when date setting should come
+//
+//        <h3>${t('revealAt')}</h3>
+//        <input type="datetime-local" id="revealTimeInput">
+//        <button onclick="setRevealTime('${eventId}')">${t('saveChanges')}</button>
 
 
 async function runMatchingAlgorithm(eventId, auto = false) {
@@ -727,7 +731,7 @@ async function runMatchingAlgorithm(eventId, auto = false) {
 function renderAdminLogin(eventId) {
     contentDiv.innerHTML = `
         <h1>${t('login')}</h1>
-        <p>Admin access only</p>
+        <p>${t('adminAccessOnlyText')}</p>
         <input type="password" id="adminPassInput" placeholder="${t('hostPass')}">
         <button onclick="adminLogin('${eventId}')">${t('login')}</button>
         <button class="secondary" onclick="location.reload()" style="margin-top:10px;">${t('cancel')}</button>
