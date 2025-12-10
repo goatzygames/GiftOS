@@ -81,7 +81,8 @@ const translations = {
         logoutText: "Log out",
         gotoAdminPanelText: "Go to Admin view",
         eventIsClosedText: "Event is closed!",
-        eventIsOpenText: "Event is open!"
+        eventIsOpenText: "Event is open!",
+        hello: "Hello, "
     },
     et: {
         appName: "GiftOS",
@@ -155,7 +156,8 @@ const translations = {
         logoutText: "Logi välja",
         gotoAdminPanelText: "Mine Adminni vaatesse",
         eventIsClosedText: "Üritus on lõppenud!",
-        eventIsOpenText: "Üritus on veel lahti!"
+        eventIsOpenText: "Üritus on veel lahti!",
+        hello: "Tere, "
 
     }
 };
@@ -727,7 +729,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
                 </div>
             </div>
             
-            <h2 style="margin-top: 15px;">Hello, ${participantData.name}!</h2>
+            <h2 style="margin-top: 15px;">${t('hello')} ${participantData.name}!</h2>
             <p style="color: var(--text-secondary); margin-bottom: 20px;">${participantData.email}</p>
 
             ${actionButtons}
