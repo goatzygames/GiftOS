@@ -535,11 +535,6 @@ function attachParticipantCountListener(eventId) {
 let globalEventHostEmail = null;
 // --- End of added global variable ---
 
-        const eventDoc = await db.collection('events').doc(eventId).get();
-        const eventData = eventDoc.data();
-
-        await db.collection('events')
-        .doc(eventId);
 
 function renderEventDashboard(eventData, eventId) {
     // --- Start of Host Email update and Title change ---
@@ -548,6 +543,7 @@ function renderEventDashboard(eventData, eventId) {
     // Clear the original title bar and use the content area for a big title
     titleDiv.innerText = t('appName'); 
     // --- End of Host Email update and Title change ---
+
 
 
     contentDiv.innerHTML = `
