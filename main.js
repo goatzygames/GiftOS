@@ -49,8 +49,8 @@ const translations = {
         invalidEmail: "Invalid email",
         pinInvalid: "PIN must be 4 digits",
         pinWeak: "Choose a stronger PIN (no repeats/sequences)",
-        editProfile: "Log in",
-        editProfileSubText: "",
+        editProfile: "Edit profile",
+        editProfileSubText: " ",
         saveChanges: "Save Changes",
         removeParticipant: "Remove",
         confirmRemove: "Are you sure you want to remove",
@@ -123,8 +123,8 @@ const translations = {
         invalidEmail: "Vigane e-post",
         pinInvalid: "PIN peab olema 4 numbrit",
         pinWeak: "Vali tugevam PIN (ei tohi olla kordused/järjestused)",
-        editProfile: "Logi sisse", // Updated from "Muuda profiili" to "Logi sisse" for consistency with "Log in"
-        editProfileSubText: "", // Added
+        editProfile: "Muuda profiili", // Updated from "Muuda profiili" to "Logi sisse" for consistency with "Log in"
+        editProfileSubText: " ", // Added
         saveChanges: "Salvesta",
         removeParticipant: "Eemalda",
         confirmRemove: "Oled kindel, et soovid eemaldada?",
@@ -582,10 +582,8 @@ function renderEventDashboard(eventData, eventId) {
         contentDiv.innerHTML += `
             <h3>${t('pairsMade')}</h3>
             <p>${t('enterEmailPin')}</p>
-            <input type="email" id="checkEmail" placeholder="${t('checkEmail')}">
-            <input type="password" id="checkPin" placeholder="${t('checkPin')}" maxlength="4">
-            <button onclick="revealTarget('${eventId}')">${t('revealTarget')}</button>
-            <div id="revealResult"></div>
+            <br>
+            <div style="margin-top:10px;"><button class="secondary" onclick="renderEditProfile('${eventId}')">${t('login')}</button></div>
         `;
     }
 
@@ -736,6 +734,8 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
             </details>
 
             ${adminButton}
+
+            <br>
             
             <button class="secondary" onclick="logoutCurrentUser()">${t('logoutText')}</button>
         </div>
