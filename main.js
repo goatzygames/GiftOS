@@ -325,16 +325,14 @@ function renderLanding() {
                     type="text" 
                     id="manualEventIdInput" 
                     placeholder="${t('enterEventId')}"
-                    style="margin-top:6px; text-align:center;"
-                >
+                    style="margin-top:6px; text-align:center;">
 
                 <br>
 
                 <button 
                     id="btn-confirm"
                     style="margin-top:8px;"
-                    onclick="openEventById()"
-                >
+                    onclick="openEventById()">
                     ${t('openById')}
                 </button>
             </div>
@@ -548,6 +546,7 @@ function renderEventDashboard(eventData, eventId) {
     contentDiv.innerHTML = `
         <div style="text-align: center; margin-bottom: 25px;">
             <h1 style="font-size: 36px; margin-bottom: 5px;">${eventData.name}</h1>
+            <h2 style="margin-bottom: 5px;">${eventID}</h2>
             <p>Status: <strong>${(eventData.status||'open').toUpperCase()}</strong></p>
         </div>
         <hr>
