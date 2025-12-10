@@ -49,7 +49,8 @@ const translations = {
         invalidEmail: "Invalid email",
         pinInvalid: "PIN must be 4 digits",
         pinWeak: "Choose a stronger PIN (no repeats/sequences)",
-        editProfile: "Edit Profile",
+        editProfile: "Log in",
+        editProfileSubText: "",
         saveChanges: "Save Changes",
         removeParticipant: "Remove",
         confirmRemove: "Are you sure you want to remove",
@@ -122,7 +123,8 @@ const translations = {
         invalidEmail: "Vigane e-post",
         pinInvalid: "PIN peab olema 4 numbrit",
         pinWeak: "Vali tugevam PIN (ei tohi olla kordused/järjestused)",
-        editProfile: "Muuda profiili",
+        editProfile: "Logi sisse", // Updated from "Muuda profiili" to "Logi sisse" for consistency with "Log in"
+        editProfileSubText: "", // Added
         saveChanges: "Salvesta",
         removeParticipant: "Eemalda",
         confirmRemove: "Oled kindel, et soovid eemaldada?",
@@ -735,7 +737,7 @@ function renderParticipantDashboard(eventId, participantData, eventStatus, isAdm
 
             ${adminButton}
             
-            <button class="secondary" onclick="logoutCurrentUser()">${t('cancel')} / Logout</button>
+            <button class="secondary" onclick="logoutCurrentUser()">${t('logoutText')}</button>
         </div>
     `;
 }
@@ -786,7 +788,7 @@ function isPinStrong(pin) {
 function renderEditProfile(eventId) {
     contentDiv.innerHTML = `
         <h1>${t('editProfile')}</h1>
-        <p>Enter your email and PIN to edit your entry.</p>
+        <p>${t('editProfileSubText')}</p>
         <input type="email" id="editEmail" placeholder="${t('yourEmail')}">
         <input type="password" id="editPin" placeholder="${t('userPin')}" maxlength="4">
         <button onclick="loadProfileForEdit('${eventId}')">${t('login')}</button>
